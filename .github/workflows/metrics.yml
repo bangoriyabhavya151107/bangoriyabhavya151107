@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate 3D Contrib Graph
         uses: yoshi389111/github-profile-3d-contrib@0.9.3
