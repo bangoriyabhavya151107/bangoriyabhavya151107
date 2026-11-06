@@ -1,0 +1,46 @@
+name: Generate 3D Contributions & Snake
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs automatically every day at midnight UTC
+  workflow_dispatch:    # Lets you trigger it manually with 1 click
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 1. Generates the 3D Isometric Contribution Graph
+      - name: Generate 3D Contrib Graph
+        uses: yoshi389111/github-profile-3d-contrib@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ github.repository_owner }}
+
+      # 2. Generates the Dark Mode Contribution Snake
+      - name: Generate Contribution Snake
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/github-snake-dark.svg?palette=github-dark
+
+      # 3. Pushes both generated graphics to the hidden 'output' branch
+      - name: Push SVGs to Output Branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
