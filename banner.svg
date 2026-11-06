@@ -26,18 +26,12 @@
       @keyframes pulseGlow { 0% { opacity: 0.45; } 100% { opacity: 1; } }
     </style>
   </defs>
-
-  <!-- Main Card Background -->
   <rect width="1000" height="280" rx="14" fill="url(#bg)" stroke="#21262d" stroke-width="2" />
-
-  <!-- Top Telemetry Header Bar -->
   <rect x="2" y="2" width="996" height="36" rx="12" fill="#161b22" opacity="0.7" />
   <circle cx="26" cy="20" r="5" fill="#ff5f56" />
   <circle cx="44" cy="20" r="5" fill="#ffbd2e" />
   <circle cx="62" cy="20" r="5" fill="#27c93f" />
   <text x="85" y="24" class="cmd">bhavya@ddu-workstation:~/systems$ ./init_portfolio.sh --mode=production</text>
-
-  <!-- Top Right Glowing Telemetry Nodes -->
   <g filter="url(#glow)" class="pulse">
     <circle cx="800" cy="82" r="8" fill="#ff2a54" stroke="#2d1219" stroke-width="3" />
     <circle cx="838" cy="82" r="8" fill="#ff2a54" stroke="#2d1219" stroke-width="3" />
@@ -45,18 +39,10 @@
     <circle cx="914" cy="82" r="8" fill="#ff2a54" stroke="#2d1219" stroke-width="3" />
     <circle cx="952" cy="82" r="8" fill="#ff2a54" stroke="#2d1219" stroke-width="3" />
   </g>
-
-  <!-- Identity & Role Block -->
   <text x="60" y="84" class="handle">BANGORIYABHAVYA151107</text>
   <text x="58" y="134" class="name">BHAVYA BANGORIYA</text>
   <text x="60" y="170" class="sub">FULL-STACK PRODUCTS · LOCAL AI & N8N AUTOMATION · SELF-HOSTED SYSTEMS</text>
-
-  <!-- Live Terminal Prompt Line -->
   <text x="60" y="204" class="term">root@bhavya-arch:~# <tspan fill="#e6edf3">docker compose up -d ollama n8n supabase-local</tspan><tspan class="cursor" fill="#38bdf8">_</tspan></text>
-
-  <!-- Divider Line -->
   <line x1="60" y1="222" x2="940" y2="222" stroke="#21262d" stroke-width="1" />
-
-  <!-- Telemetry Wave Graph -->
   <path d="M 20 260 L 95 252 L 180 232 L 265 256 L 350 238 L 430 226 L 515 254 L 605 234 L 690 250 L 785 230 L 875 248 L 980 238" fill="none" stroke="url(#cyanGlow)" stroke-width="2.5" filter="url(#glow)" />
 </svg>
