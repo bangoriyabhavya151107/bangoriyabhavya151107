@@ -1,42 +1,95 @@
-name: Generate 3D Contributions & Snake
-
+name: Update profile assets
+ 
+# Generates three things for your profile README and commits them to this repo:
+#   1. profile-3d-contrib/          3D contribution graph      (yoshi389111/github-profile-3d-contrib)
+#   2. snake/                       contribution snake         (Platane/snk)
+#   3. profile-summary-card-output/ stats and language cards   (vn7n24fzkq/github-profile-summary-cards)
+ 
 on:
   schedule:
-    - cron: "0 0 * * *"
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
-
+    - cron: "30 18 * * *"   # 18:30 UTC = 00:00 IST, every day
+  workflow_dispatch:         # adds the "Run workflow" button on the Actions tab
+ 
+# The default token is read-only. This line lets the job push the generated SVG files.
 permissions:
   contents: write
-
+ 
+# Never run two copies at the same time (two pushes at once would collide).
+concurrency:
+  group: profile-assets
+  cancel-in-progress: false
+ 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  generate:
+    name: Generate SVGs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+ 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate 3D Contrib Graph
-        uses: yoshi389111/github-profile-3d-contrib@0.9.3
+      - name: Check out repository
+        uses: actions/checkout@v5
+ 
+      # 1) 3D contribution graph
+      # Your old workflow used "@0.9.3". That tag does not exist, which is why every run
+      # failed in about 2 seconds. Releases from 0.9.1 on are tagged with a "v": v0.9.3.
+      - name: 3D contribution graph
+        id: contrib3d
+        continue-on-error: true   # one failing generator should not block the others
+        uses: yoshi389111/github-profile-3d-contrib@v0.9.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USERNAME: ${{ github.repository_owner }}
-
-      - name: Generate Contribution Snake
+ 
+      # 2) Contribution snake (light and dark versions)
+      - name: Contribution snake
+        id: snake
+        continue-on-error: true
         uses: Platane/snk/svg-only@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
-            dist/github-snake-dark.svg?palette=github-dark
-
-      - name: Commit & Push Generated SVGs to Repo
+            snake/snake.svg
+            snake/snake-dark.svg?palette=github-dark
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+      # 3) Profile summary cards (only the github_dark theme, so the repo stays tidy)
+      # If these cards come out incomplete, create a personal access token, save it as a
+      # repository secret named SUMMARY_GITHUB_TOKEN, and this step will use it automatically.
+      - name: Profile summary cards
+        id: cards
+        continue-on-error: true
+        uses: vn7n24fzkq/github-profile-summary-cards@release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SUMMARY_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        with:
+          USERNAME: ${{ github.repository_owner }}
+          UTC_OFFSET: 5.5       # India (UTC+5:30), used for the "productive time" card
+          THEME: github_dark
+          AUTO_PUSH: false      # we commit everything together in the next step
+ 
+      - name: Commit generated files
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add profile-3d-contrib/ dist/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update 3D contrib and snake SVGs [skip ci]" && git push)
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+ 
+          for dir in profile-3d-contrib snake profile-summary-card-output; do
+            if [ -d "$dir" ]; then git add --all "$dir"; fi
+          done
+ 
+          if git diff --cached --quiet; then
+            echo "Nothing changed, nothing to commit."
+          else
+            git commit -m "chore: refresh profile assets"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+ 
+      # Because of continue-on-error the steps above never turn the run red on their own.
+      # This step makes a failed generator visible instead of silently skipping it.
+      - name: Fail the run if any generator failed
+        if: ${{ steps.contrib3d.outcome == 'failure' || steps.snake.outcome == 'failure' || steps.cards.outcome == 'failure' }}
+        run: |
+          echo "::error::At least one generator step failed. Open the steps above to see which one."
+          exit 1
+ 
